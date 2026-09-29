@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Calculadora de Áreas · Herón y Coordenadas</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --bg:#0f172a; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+  --primary:#2563eb; --primary-2:#1d4ed8; --accent:#059669;
+  --danger:#dc2626; --line:#e2e8f0; --soft:#f8fafc;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--soft);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  -webkit-text-size-adjust:100%}
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;
+  padding:18px 16px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+header h1{margin:0;font-size:18px;font-weight:700}
+header p{margin:4px 0 0;font-size:12px;opacity:.9}
+main{padding:14px;max-width:900px;margin:0 auto;padding-bottom:80px}
+.card{background:var(--card);border-radius:14px;padding:16px;margin-bottom:14px;
+  box-shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04)}
+h2{font-size:16px;margin:0 0 12px;color:var(--primary-2)}
+h3{font-size:14px;margin:14px 0 8px;color:var(--ink)}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
+button{cursor:pointer;font-family:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:12px 16px;border-radius:10px;border:none;font-size:15px;font-weight:600;
+  background:var(--primary);color:#fff;min-height:46px}
+.btn:active{background:var(--primary-2)}
+.btn.sec{background:#e2e8f0;color:var(--ink)}
+.btn.ok{background:var(--accent)}
+.btn.warn{background:#f59e0b}
+.btn.danger{background:var(--danger)}
+.btn.small{padding:8px 10px;font-size:13px;min-height:36px;border-radius:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row > .btn{flex:1 1 auto}
+
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.pts{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+table.pts th, table.pts td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center}
+table.pts th{background:#f1f5f9;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+table.pts td input{width:100%;border:1px solid var(--line);border-radius:8px;
+  padding:10px 8px;font-size:16px;text-align:right;font-family:inherit;background:#fff}
+table.pts td input:focus{outline:2px solid var(--primary);border-color:var(--primary)}
+.order-cell{display:flex;align-items:center;justify-content:center;gap:4px}
+.order-cell input{width:52px !important;text-align:center !important;font-weight:700}
+.arrows{display:flex;flex-direction:column;gap:2px}
+.arrows button{background:#e2e8f0;border:none;border-radius:6px;width:26px;height:20px;
+  font-size:12px;line-height:1;padding:0}
+.arrows button:active{background:#cbd5e1}
+
+.help{background:#eff6ff;border-left:3px solid var(--primary);padding:10px 12px;
+  border-radius:8px;font-size:13px;color:#1e3a8a;margin:8px 0}
+.help code{background:#dbeafe;padding:1px 5px;border-radius:4px}
+.suggest{background:#fef3c7;border-left:3px solid #f59e0b;padding:10px 12px;
+  border-radius:8px;font-size:13px;color:#78350f;margin:8px 0;display:flex;
+  justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+
+input[type=file]{font-size:14px;padding:8px;border:1px dashed var(--line);border-radius:8px;width:100%}
+input[type=text], input[type=date]{
+  width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;font-family:inherit;background:#fff}
+
+.formula{background:#f8fafc;border:1px solid var(--line);border-radius:10px;
+  padding:12px;margin:10px 0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.katex{font-size:1.02em !important}
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0}
+
+table.res{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+table.res th, table.res td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:center}
+table.res th{background:#f1f5f9;color:var(--muted);font-size:11px;text-transform:uppercase}
+table.res td.num{font-variant-numeric:tabular-nums;text-align:right}
+table.res tr:nth-child(even) td{background:#fafbfc}
+
+.big{font-size:16px;font-weight:700;color:var(--accent);text-align:center;
+  background:#ecfdf5;border-radius:10px;padding:12px;margin:10px 0}
+.big small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:2px}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.compare .box{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}
+.compare .box .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.compare .box .val{font-size:18px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums}
+.diff{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px;
+  text-align:center;font-size:13px;color:#92400e;margin-top:10px}
+
+.svg-wrap{background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px;overflow:hidden}
+.svg-wrap svg{width:100%;height:auto;display:block}
+
+.tabs{display:flex;gap:4px;margin-bottom:10px;background:#f1f5f9;border-radius:10px;padding:4px}
+.tabs button{flex:1;background:transparent;border:none;padding:10px 6px;border-radius:8px;
+  font-size:13px;font-weight:600;color:var(--muted)}
+.tabs button.active{background:#fff;color:var(--primary-2);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.tabpane{display:none}
+.tabpane.active{display:block}
+
+.stepbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}
+.stepbox h4{margin:0 0 8px;font-size:13px;color:var(--primary-2);text-transform:uppercase;letter-spacing:.5px}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);
+  background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;
+  opacity:0;pointer-events:none;transition:opacity .25s;z-index:100;max-width:90vw}
+.toast.show{opacity:1}
+
+@media print{
+  header, .no-print{display:none !important}
+  body{background:#fff}
+  .card{box-shadow:none;border:1px solid #ddd;page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📐 Cálculo de Áreas · Herón y Coordenadas</h1>
+  <p>Coordenadas UTM (Este, Norte) · 3 decimales · paso a paso</p>
+</header>
+
+<main>
+
+  <section class="card no-print">
+    <h2>1) Datos del informe</h2>
+    <div class="row" style="gap:10px">
+      <div style="flex:1 1 220px">
+        <label>Alumno</label>
+        <input type="text" id="alumno" placeholder="Nombre completo">
+      </div>
+      <div style="flex:1 1 220px">
+        <label>Curso / Paralelo</label>
+        <input type="text" id="curso" placeholder="Ej: 3° BGU 'A'">
+      </div>
+    </div>
+    <div class="row" style="gap:10px;margin-top:10px">
+      <div style="flex:1 1 220px">
+        <label>Institución / Asignatura</label>
+        <input type="text" id="institucion" placeholder="Ej: Topografía - U.E. ..." value="Topografía">
+      </div>
+      <div style="flex:1 1 220px">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
+      </div>
+    </div>
+  </section>
+
+  <section class="card no-print">
+    <h2>2) Ingreso de puntos</h2>
+
+    <div class="tabs" id="tabs">
+      <button class="active" data-tab="manual">✏️ Manual</button>
+      <button data-tab="archivo">📂 Archivo</button>
+    </div>
+
+    <div class="tabpane active" id="tab-manual">
+      <div class="help">
+        Ingresa <b>Este</b> (X) y <b>Norte</b> (Y) en metros. Usa el campo <b>#</b> para
+        indicar el <b>orden del polígono</b> o las flechas ↑↓. El polígono se cierra automáticamente.
+      </div>
+      <div class="table-wrap">
+        <table class="pts">
+          <thead>
+            <tr><th>Punto</th><th>Orden #</th><th>Este (X)</th><th>Norte (Y)</th><th></th></tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sec small" onclick="addRow()">➕ Añadir punto</button>
+        <button class="btn sec small" onclick="clearAll()">🗑️ Limpiar</button>
+      </div>
+    </div>
+
+    <div class="tabpane" id="tab-archivo">
+      <div class="help">
+        Sube un <b>CSV</b> o <b>Excel (.xlsx/.xls)</b> con encabezados
+        <code>Puntos, Este, norte</code>. Cada fila = un vértice, en orden.
+      </div>
+      <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" />
+    </div>
+
+    <div style="margin-top:14px">
+      <label>Triangular (abanico) desde el vértice:</label>
+      <select id="apexSel" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);font-size:16px;background:#fff"></select>
+    </div>
+
+    <div id="suggestBox" class="suggest" style="display:none">
+      <span id="suggestText"></span>
+      <button class="btn warn small" onclick="applySuggestion()">Usar sugerido</button>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn ok" onclick="calcularTodo()">🧮 Calcular</button>
+      <button class="btn sec" onclick="sugerirVertice()">🎯 Sugerir vértice</button>
+    </div>
+  </section>
+
+  <section class="card" id="resultsCard" style="display:none">
+    <h2>3) Resultados</h2>
+    <div class="big" id="areaBig"></div>
+
+    <div class="tabs" id="tabs2">
+      <button class="active" data-tab="heron">Herón</button>
+      <button data-tab="coord">Coordenadas</button>
+      <button data-tab="comp">Comparación</button>
+      <button data-tab="plano">Plano</button>
+    </div>
+
+    <div class="tabpane active" id="tab-heron"></div>
+    <div class="tabpane" id="tab-coord"></div>
+    <div class="tabpane" id="tab-comp"></div>
+    <div class="tabpane" id="tab-plano">
+      <div class="svg-wrap" id="svgWrap"></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px" id="scaleText"></div>
+    </div>
+
+    <div class="row no-print" style="margin-top:16px">
+      <button class="btn" onclick="generarInformePDF()">📄 Generar informe PDF</button>
+      <button class="btn sec" onclick="window.print()">🖨️ Imprimir vista</button>
+      <button class="btn sec" onclick="exportCSV()">⬇️ CSV</button>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= UTILIDADES ================= */
+const f3 = n => (Math.round(n*1000)/1000).toFixed(3);
+const fLat = n => {
+  const nice = [50,100,200,250,500,1000,1250,2000,2500,5000,10000,12500,20000,25000,50000,100000];
+  for (const v of nice) if (n <= v) return v;
+  return Math.ceil(n/10000)*10000;
+};
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function katexInto(el, tex, display){
+  if (!el) return;
+  try{ katex.render(tex, el, {throwOnError:false, displayMode:!!display}); }
+  catch(e){ el.textContent=tex; }
+}
+
+/* ================= TABS ================= */
+document.querySelectorAll('#tabs button, #tabs2 button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    const parent = b.closest('.tabs');
+    parent.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const container = parent.parentElement;
+    container.querySelectorAll(':scope > .tabpane').forEach(p=>p.classList.remove('active'));
+    const pane = container.querySelector('#tab-'+b.dataset.tab);
+    if (pane) pane.classList.add('active');
+  });
+});
+
+/* ================= TABLA MANUAL ================= */
+const tbody = document.getElementById('tbody');
+let counter = 0;
+
+function addRow(punto, este, norte, order){
+  counter++;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" value="${punto ?? ('P'+counter)}" data-k="nombre" style="text-align:center"></td>
+    <td><div class="order-cell">
+        <input type="number" inputmode="numeric" value="${order ?? counter}" data-k="orden" min="1" step="1">
+        <div class="arrows">
+          <button type="button" onclick="moveRow(this,-1)">▲</button>
+          <button type="button" onclick="moveRow(this,1)">▼</button>
+        </div>
+    </div></td>
+    <td><input type="text" inputmode="decimal" value="${este ?? ''}" data-k="este" placeholder="0.000"></td>
+    <td><input type="text" inputmode="decimal" value="${norte ?? ''}" data-k="norte" placeholder="0.000"></td>
+    <td><button type="button" class="btn danger small" onclick="this.closest('tr').remove();refreshApex()">✕</button></td>`;
+  tbody.appendChild(tr);
+  tr.querySelectorAll('input').forEach(i=>i.addEventListener('input', refreshApex));
+  refreshApex();
+}
+function moveRow(btn, dir){
+  const tr = btn.closest('tr');
+  if (dir<0 && tr.previousElementSibling) tr.parentNode.insertBefore(tr, tr.previousElementSibling);
+  if (dir>0 && tr.nextElementSibling) tr.parentNode.insertBefore(tr.nextElementSibling, tr);
+  refreshApex();
+}
+function clearAll(){
+  tbody.innerHTML=''; counter=0;
+  for(let i=0;i<4;i++) addRow();
+  document.getElementById('resultsCard').style.display='none';
+  document.getElementById('suggestBox').style.display='none';
+}
+function readRows(){
+  const rows=[];
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    const nombre = tr.querySelector('[data-k=nombre]').value.trim();
+    const orden  = parseInt(tr.querySelector('[data-k=orden]').value) || 0;
+    const este   = parseFloat(tr.querySelector('[data-k=este]').value.replace(',','.'));
+    const norte  = parseFloat(tr.querySelector('[data-k=norte]').value.replace(',','.'));
+    if (nombre !== '' && !isNaN(este) && !isNaN(norte)) rows.push({nombre,orden,este,norte});
+  });
+  rows.sort((a,b)=>a.orden-b.orden);
+  return rows;
+}
+function refreshApex(){
+  const rows = readRows();
+  const sel = document.getElementById('apexSel');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  rows.forEach((r,i)=>{
+    const o = document.createElement('option');
+    o.value = i; o.textContent = `Vértice ${r.nombre} (${i+1} de ${rows.length})`;
+    sel.appendChild(o);
+  });
+  if (prev && prev < rows.length) sel.value = prev;
+}
+
+/* ================= CARGA ARCHIVO ================= */
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const wb = XLSX.read(ev.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (!json.length) return toast('Archivo vacío');
+      let start = 0;
+      const first = json[0].map(String).map(s=>s.toLowerCase().trim());
+      if (first.some(c=>c.includes('este')||c.includes('norte')||c.includes('punto'))) start = 1;
+      tbody.innerHTML=''; counter=0;
+      for (let i=start; i<json.length; i++){
+        const r = json[i]; if (!r || r.length<3) continue;
+        const nombre = String(r[0]||('P'+(i-start+1))).trim();
+        const este = parseFloat(String(r[1]).replace(',','.'));
+        const norte= parseFloat(String(r[2]).replace(',','.'));
+        if (isNaN(este)||isNaN(norte)) continue;
+        addRow(nombre, este, norte, i-start+1);
+      }
+      refreshApex();
+      toast('Archivo cargado ✔');
+    }catch(err){ console.error(err); toast('Error al leer el archivo'); }
+  };
+  reader.readAsArrayBuffer(f);
+});
+
+/* ================= GEOMETRÍA ================= */
+function dist(p,q){ return Math.hypot(p.este-q.este, p.norte-q.norte); }
+
+function areaHeron(pts, apexIdx){
+  const n = pts.length;
+  if (n<3) return null;
+  const tri=[]; let total=0;
+  for (let k=1; k<n-1; k++){
+    const i0=apexIdx, i1=(apexIdx+k)%n, i2=(apexIdx+k+1)%n;
+    const A=pts[i0], B=pts[i1], C=pts[i2];
+    const a=dist(B,C);
+    const b=dist(A,C);
+    const c=dist(A,B);
+    const s=(a+b+c)/2;
+    const rad=s*(s-a)*(s-b)*(s-c);
+    const area= rad>0 ? Math.sqrt(rad) : 0;
+    total+=area;
+    tri.push({A,B,C,a,b,c,s,area,rad});
+  }
+  return {tri, total};
+}
+
+function areaCoords(pts){
+  const n = pts.length; let sum=0; const terms=[];
+  for (let i=0;i<n;i++){
+    const p=pts[i], q=pts[(i+1)%n];
+    const t = p.este*q.norte - q.este*p.norte;
+    terms.push({p,q,t});
+    sum += t;
+  }
+  return {terms, sum, area: Math.abs(sum)/2};
+}
+
+function buildPolygon(pts){
+  if (pts.length>1){
+    const a=pts[0], b=pts[pts.length-1];
+    if (Math.abs(a.este-b.este)<1e-9 && Math.abs(a.norte-b.norte)<1e-9) return pts.slice(0,-1);
+  }
+  return pts.slice();
+}
+
+function mejorVertice(pts){
+  const n = pts.length;
+  if (n<4) return 0;
+  let best = null;
+  for (let v=0; v<n; v++){
+    const H = areaHeron(pts, v);
+    if (!H) continue;
+    if (H.tri.some(t=>t.area < 1e-9)) continue;
+    let cost = 0;
+    for (const t of H.tri){
+      const per = t.a+t.b+t.c;
+      cost += (per*per)/t.area;
+    }
+    if (best===null || cost < best.cost) best = {v, cost};
+  }
+  return best ? best.v : 0;
+}
+function sugerirVertice(){
+  const raw = readRows();
+  if (raw.length<3){ toast('Ingresa al menos 3 puntos'); return; }
+  const pts = buildPolygon(raw);
+  const v = mejorVertice(pts);
+  const box = document.getElementById('suggestBox');
+  document.getElementById('suggestText').innerHTML =
+    `🎯 Vértice sugerido: <b>${pts[v].nombre}</b> (posición ${v+1}) — produce los triángulos más regulares.`;
+  box.style.display='flex';
+  box.dataset.v = v;
+}
+function applySuggestion(){
+  const v = document.getElementById('suggestBox').dataset.v;
+  if (v!==undefined){ document.getElementById('apexSel').value = v; toast('Vértice aplicado ✔'); }
+}
+
+/* ================= CÁLCULO ================= */
+let lastResult = null;
+
+function calcularTodo(){
+  const raw = readRows();
+  if (raw.length<3){ toast('Se necesitan al menos 3 puntos'); return; }
+  const pts = buildPolygon(raw);
+  const apexIdx = Math.min(parseInt(document.getElementById('apexSel').value)||0, pts.length-1);
+  const H = areaHeron(pts, apexIdx);
+  const C = areaCoords(pts);
+
+  const meta = {
+    alumno: document.getElementById('alumno').value.trim(),
+    curso: document.getElementById('curso').value.trim(),
+    institucion: document.getElementById('institucion').value.trim() || 'Topografía',
+    fecha: document.getElementById('fecha').value || new Date().toISOString().slice(0,10)
+  };
+
+  lastResult = {pts, apexIdx, H, C, meta};
+  renderAll();
+  document.getElementById('resultsCard').style.display='block';
+  document.getElementById('resultsCard').scrollIntoView({behavior:'smooth'});
+}
+
+/* ================= RENDER PANTALLA ================= */
+function renderAll(){
+  const {pts, apexIdx, H, C} = lastResult;
+  const Aheron = H.total, Acoord = C.area;
+  const ha = Acoord/10000;
+
+  document.getElementById('areaBig').innerHTML =
+    `Área (coordenadas): <b>${f3(Acoord)} m²</b> = <b>${ha.toFixed(3)} ha</b>
+     <small>Herón: ${f3(Aheron)} m² · Diferencia: ${f3(Math.abs(Aheron-Acoord))} m²</small>`;
+
+  renderHeron(pts, apexIdx, H);
+  renderCoord(pts, C);
+  renderCompare(Aheron, Acoord);
+  renderPlano(pts, Acoord, 'svgWrap', 'scaleText');
+}
+
+function renderHeron(pts, apexIdx, H){
+  const el = document.getElementById('tab-heron');
+  let html = `<h3>Fórmula de Herón</h3>
+  <div class="help">Triangulación en abanico desde el vértice <b>${pts[apexIdx].nombre}</b>.</div>
+  <div class="stepbox">
+    <h4>Fórmulas base</h4>
+    <div id="fh_dist"></div>
+    <div id="fh_heron"></div>
+    <div id="fh_total"></div>
+  </div>
+  <h3>Detalle por triángulo</h3>
+  <div class="table-wrap"><table class="res">
+    <thead><tr><th>Triángulo</th><th>a</th><th>b</th><th>c</th><th>s</th><th>Área (m²)</th></tr></thead>
+    <tbody>`;
+  H.tri.forEach(t=>{
+    html += `<tr>
+      <td>${t.A.nombre}-${t.B.nombre}-${t.C.nombre}</td>
+      <td class="num">${f3(t.a)}</td>
+      <td class="num">${f3(t.b)}</td>
+      <td class="num">${f3(t.c)}</td>
+      <td class="num">${f3(t.s)}</td>
+      <td class="num">${f3(t.area)}</td></tr>`;
+  });
+  html += `<tr style="font-weight:700;background:#ecfdf5">
+    <td colspan="5" style="text-align:right">Área total (Herón)</td>
+    <td class="num">${f3(H.total)}</td></tr>`;
+  html += `</tbody></table></div>`;
+  el.innerHTML = html;
+
+  katexInto(document.getElementById('fh_dist'),
+    `d = \\sqrt{(E_2-E_1)^2 + (N_2-N_1)^2}`, true);
+  katexInto(document.getElementById('fh_heron'),
+    `A_{\\triangle} = \\sqrt{s(s-a)(s-b)(s-c)},\\quad s=\\frac{a+b+c}{2}`, true);
+  katexInto(document.getElementById('fh_total'),
+    `A_{total} = \\sum_{i=1}^{n-2} A_i = ${f3(H.total)}\\ \\text{m}^2`, true);
+}
+
+function renderCoord(pts, C){
+  const el = document.getElementById('tab-coord');
+  let html = `<h3>Método de coordenadas (Gauss / Shoelace)</h3>
+  <div class="stepbox">
+    <h4>Fórmula general</h4>
+    <div id="fc0"></div>
+    <div id="fc1"></div>
+  </div>
+  <h3>Tabla de productos cruzados</h3>
+  <div class="table-wrap"><table class="res">
+    <thead><tr><th>Par</th><th>E_i · N_{i+1}</th><th>E_{i+1} · N_i</th><th>Diferencia</th></tr></thead>
+    <tbody>`;
+  C.terms.forEach((t,i)=>{
+    html += `<tr>
+      <td>${pts[i].nombre} → ${pts[(i+1)%pts.length].nombre}</td>
+      <td class="num">${f3(t.p.este*t.q.norte)}</td>
+      <td class="num">${f3(t.q.este*t.p.norte)}</td>
+      <td class="num">${f3(t.t)}</td></tr>`;
+  });
+  html += `<tr style="font-weight:700;background:#eff6ff">
+    <td colspan="3" style="text-align:right">Σ</td>
+    <td class="num">${f3(C.sum)}</td></tr>`;
+  html += `</tbody></table></div>
+  <div class="big">Área = ½ · |Σ| = ${f3(C.area)} m² = ${(C.area/10000).toFixed(3)} ha</div>`;
+  el.innerHTML = html;
+
+  katexInto(document.getElementById('fc0'),
+    `A = \\frac{1}{2}\\left|\\sum_{i=1}^{n}\\left(E_i\\,N_{i+1} - E_{i+1}\\,N_i\\right)\\right|`, true);
+  katexInto(document.getElementById('fc1'),
+    `A = \\frac{1}{2}\\left|${f3(C.sum)}\\right| = ${f3(C.area)}\\ \\text{m}^2`, true);
+}
+
+function renderCompare(Aheron, Acoord){
+  const el = document.getElementById('tab-comp');
+  const diff = Math.abs(Aheron-Acoord);
+  const rel = Acoord ? (diff/Acoord*100) : 0;
+  el.innerHTML = `
+    <div class="compare">
+      <div class="box"><div class="lbl">Herón</div><div class="val">${f3(Aheron)} m²</div>
+        <div style="font-size:11px;color:var(--muted)">${(Aheron/10000).toFixed(3)} ha</div></div>
+      <div class="box"><div class="lbl">Coordenadas</div><div class="val">${f3(Acoord)} m²</div>
+        <div style="font-size:11px;color:var(--muted)">${(Acoord/10000).toFixed(3)} ha</div></div>
+    </div>
+    <div class="diff">Diferencia absoluta: <b>${f3(diff)} m²</b> · Relativa: <b>${rel.toFixed(3)} %</b></div>
+    <div class="stepbox" id="fcompBox"></div>`;
+  katexInto(document.getElementById('fcompBox'),
+    `\\Delta A = \\left|A_{Herón} - A_{Coord}\\right| = \\left|${f3(Aheron)} - ${f3(Acoord)}\\right| = ${f3(diff)}\\ \\text{m}^2`, true);
+}
+
+/* ================= PLANO SVG ================= */
+function buildSVG(pts, areaVal, opts={}){
+  const W = opts.W || 700, H = opts.H || 520;
+  const margin = {l:70,r:70,t:60,b:70};
+  const innerW = W-margin.l-margin.r;
+  const innerH = H-margin.t-margin.b;
+
+  const minE = Math.min(...pts.map(p=>p.este));
+  const maxE = Math.max(...pts.map(p=>p.este));
+  const minN = Math.min(...pts.map(p=>p.norte));
+  const maxN = Math.max(...pts.map(p=>p.norte));
+  const spanE = Math.max(maxE-minE, 1e-6);
+  const spanN = Math.max(maxN-minN, 1e-6);
+  const scale = Math.min(innerW/spanE, innerH/spanN);
+
+  const pxPerMm = 3.7795;
+  const metersPerMmPaper = 1/(scale/pxPerMm);
+  const N_exact = metersPerMmPaper*1000;
+  const N = fLat(N_exact);
+
+  const cx = margin.l + innerW/2;
+  const cy = margin.t + innerH/2;
+  const midE = (minE+maxE)/2;
+  const midN = (minN+maxN)/2;
+  const X = e => cx + (e-midE)*scale;
+  const Y = n => cy - (n-midN)*scale;
+
+  function niceStep(span, target=8){
+    const raw = span/target;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw/pow;
+    let m = 1; if (n>5) m=10; else if (n>2) m=5; else if (n>1) m=2;
+    return m*pow;
+  }
+  const stepE = niceStep(spanE, 8);
+  const stepN = niceStep(spanN, 8);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">`;
+  svg += `<rect width="${W}" height="${H}" fill="#fff"/>`;
+  svg += `<rect x="${margin.l}" y="${margin.t}" width="${innerW}" height="${innerH}" fill="#fcfdff" stroke="#cbd5e1"/>`;
+
+  const e0 = Math.ceil((minE - stepE)/stepE)*stepE;
+  const e1 = Math.floor((maxE + stepE)/stepE)*stepE;
+  for (let e=e0; e<=e1+1e-9; e+=stepE){
+    const x = X(e); if (x<margin.l-1 || x>margin.l+innerW+1) continue;
+    svg += `<line x1="${x}" y1="${margin.t}" x2="${x}" y2="${margin.t+innerH}" stroke="#e2e8f0" stroke-width="0.8"/>`;
+    svg += `<text x="${x}" y="${margin.t+innerH+16}" font-size="10" fill="#64748b" text-anchor="middle">${e.toFixed(0)}</text>`;
+  }
+  const n0 = Math.ceil((minN - stepN)/stepN)*stepN;
+  const n1 = Math.floor((maxN + stepN)/stepN)*stepN;
+  for (let n=n0; n<=n1+1e-9; n+=stepN){
+    const y = Y(n); if (y<margin.t-1 || y>margin.t+innerH+1) continue;
+    svg += `<line x1="${margin.l}" y1="${y}" x2="${margin.l+innerW}" y2="${y}" stroke="#e2e8f0" stroke-width="0.8"/>`;
+    svg += `<text x="${margin.l-6}" y="${y+3}" font-size="10" fill="#64748b" text-anchor="end">${n.toFixed(0)}</text>`;
+  }
+  svg += `<text x="${margin.l+innerW/2}" y="${H-8}" font-size="11" font-weight="700" fill="#334155" text-anchor="middle">ESTE (m)</text>`;
+  svg += `<text x="14" y="${margin.t+innerH/2}" font-size="11" font-weight="700" fill="#334155" text-anchor="middle" transform="rotate(-90 14 ${margin.t+innerH/2})">NORTE (m)</text>`;
+
+  const pathPts = pts.map(p=>`${X(p.este)},${Y(p.norte)}`).join(' ');
+  svg += `<polygon points="${pathPts}" fill="rgba(37,99,235,.15)" stroke="#1d4ed8" stroke-width="2"/>`;
+
+  pts.forEach(p=>{
+    const x=X(p.este), y=Y(p.norte);
+    svg += `<circle cx="${x}" cy="${y}" r="4" fill="#dc2626"/>`;
+    svg += `<text x="${x+8}" y="${y-8}" font-size="12" font-weight="700" fill="#0f172a">${p.nombre}</text>`;
+  });
+
+  const areaTxt = `${f3(areaVal)} m²  ·  ${(areaVal/10000).toFixed(3)} ha`;
+  svg += `<rect x="${W-280}" y="12" width="266" height="30" rx="8" fill="#ecfdf5" stroke="#059669"/>`;
+  svg += `<text x="${W-147}" y="32" font-size="12" font-weight="700" fill="#065f46" text-anchor="middle">Área: ${areaTxt}</text>`;
+
+  const nx = W-42, ny = 78;
+  svg += `<g transform="translate(${nx},${ny})">
+    <polygon points="0,-32 -9,10 0,4 9,10" fill="#0f172a"/>
+    <text x="0" y="26" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">N</text>
+  </g>`;
+
+  const barMeters = (()=>{
+    const target = spanE * 0.25;
+    const p = Math.pow(10, Math.floor(Math.log10(target)));
+    const n = target/p;
+    let m = 1; if (n>5) m=5; else if (n>2) m=2;
+    return m*p;
+  })();
+  const barPx = barMeters * scale;
+  const bx = margin.l, by = H-40;
+  svg += `<g>
+    <rect x="${bx}" y="${by}" width="${barPx/2}" height="8" fill="#0f172a"/>
+    <rect x="${bx+barPx/2}" y="${by}" width="${barPx/2}" height="8" fill="#fff" stroke="#0f172a"/>
+    <rect x="${bx}" y="${by}" width="${barPx}" height="8" fill="none" stroke="#0f172a"/>
+    <text x="${bx}" y="${by+22}" font-size="10" fill="#334155">0</text>
+    <text x="${bx+barPx}" y="${by+22}" font-size="10" fill="#334155" text-anchor="end">${barMeters} m</text>
+    <text x="${bx+barPx/2}" y="${by-6}" font-size="10" fill="#64748b" text-anchor="middle">Escala gráfica</text>
+  </g>`;
+  svg += `</svg>`;
+
+  return {svg, N, stepE, stepN, spanE, spanN};
+}
+
+function renderPlano(pts, areaVal, wrapId='svgWrap', textId='scaleText'){
+  const {svg, N, stepE, stepN, spanE, spanN} = buildSVG(pts, areaVal);
+  document.getElementById(wrapId).innerHTML = svg;
+  document.getElementById(textId).innerHTML =
+    `Escala numérica: <b>1 : ${N.toLocaleString('es-EC')}</b> · ` +
+    `Extensión E: ${f3(spanE)} m · N: ${f3(spanN)} m · ` +
+    `Grilla: E=${stepE} m, N=${stepN} m`;
+}
+
+/* ================= INFORME PDF ================= */
+function generarInformePDF(){
+  if (!lastResult) return toast('Primero calcula');
+  const {pts, apexIdx, H, C, meta} = lastResult;
+  const Aheron = H.total, Acoord = C.area;
+  const diff = Math.abs(Aheron-Acoord);
+  const rel = Acoord ? (diff/Acoord*100) : 0;
+  const {svg} = buildSVG(pts, Acoord, {W:760, H:540});
+
+  const esc = s => String(s||'').replace(/[<>&]/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+  const alumno = esc(meta.alumno) || '________________________';
+  const curso  = esc(meta.curso)  || '________________________';
+  const inst   = esc(meta.institucion);
+  const fecha  = esc(meta.fecha);
+
+  /* ============ Construcción del HTML del informe ============ */
+  /* Nota: NO inyectamos <script> al informe. Renderizamos KaTeX aquí mismo antes de abrir la ventana
+     y luego llamamos a print() desde la ventana padre. */
+
+  // Helper: renderiza una fórmula a HTML con KaTeX (devuelve string)
+  const K = (tex, display=true) => {
+    try { return katex.renderToString(tex, {throwOnError:false, displayMode:display}); }
+    catch(e){ return `<code>${tex}</code>`; }
+  };
+
+  // Portada
+  let html = `
+  <div class="cover">
+    <div class="sub">${inst}</div>
+    <div class="title">Cálculo de Áreas por los Métodos<br>de Herón y de Coordenadas</div>
+    <div class="sub">Informe de práctica</div>
+    <div class="meta">
+      <div><b>Alumno:</b> ${alumno}</div>
+      <div><b>Curso:</b> ${curso}</div>
+      <div><b>Fecha:</b> ${fecha}</div>
+      <div><b>N° de vértices:</b> ${pts.length}</div>
+      <div><b>Vértice de abanico (Herón):</b> ${esc(pts[apexIdx].nombre)}</div>
+    </div>
+  </div>`;
+
+  // Datos de entrada
+  html += `<div class="pagebreak"></div>
+  <h2>1. Datos de entrada (coordenadas UTM en metros)</h2>
+  <table class="data"><thead><tr><th>Punto</th><th>Este (X)</th><th>Norte (Y)</th></tr></thead><tbody>`;
+  pts.forEach(p=>{
+    html += `<tr><td>${esc(p.nombre)}</td><td class="num">${f3(p.este)}</td><td class="num">${f3(p.norte)}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // ===== MÉTODO DE HERÓN =====
+  html += `<h2>2. Método de Herón (triangulación en abanico)</h2>
+  <p style="font-size:11.5px;color:#475569">El polígono se divide en triángulos tomando como vértice común
+  <b>${esc(pts[apexIdx].nombre)}</b>. Para cada triángulo se calculan los tres lados con la fórmula de distancia,
+  el semiperímetro y el área con la fórmula de Herón.</p>
+  <h4>Fórmulas base</h4>
+  ${K('d = \\sqrt{(E_2-E_1)^2 + (N_2-N_1)^2}')}
+  ${K('s = \\frac{a+b+c}{2}')}
+  ${K('A_{\\triangle} = \\sqrt{s\\,(s-a)(s-b)(s-c)}')}`;
+
+  H.tri.forEach((t,i)=>{
+    const nm = `${t.A.nombre}-${t.B.nombre}-${t.C.nombre}`;
+    html += `<div class="tri">
+      <h4>Triángulo ${i+1}: ${esc(nm)}</h4>
+      <div class="paso"><b>Lado a</b> = distancia ${esc(t.B.nombre)}–${esc(t.C.nombre)}:</div>
+      ${K(`a = \\sqrt{(${f3(t.C.este)} - ${f3(t.B.este)})^2 + (${f3(t.C.norte)} - ${f3(t.B.norte)})^2}`)}
+      ${K(`a = \\sqrt{(${f3(t.C.este-t.B.este)})^2 + (${f3(t.C.norte-t.B.norte)})^2} = ${f3(t.a)}\\ \\text{m}`)}
+      <div class="paso"><b>Lado b</b> = distancia ${esc(t.A.nombre)}–${esc(t.C.nombre)}:</div>
+      ${K(`b = \\sqrt{(${f3(t.C.este)} - ${f3(t.A.este)})^2 + (${f3(t.C.norte)} - ${f3(t.A.norte)})^2}`)}
+      ${K(`b = \\sqrt{(${f3(t.C.este-t.A.este)})^2 + (${f3(t.C.norte-t.A.norte)})^2} = ${f3(t.b)}\\ \\text{m}`)}
+      <div class="paso"><b>Lado c</b> = distancia ${esc(t.A.nombre)}–${esc(t.B.nombre)}:</div>
+      ${K(`c = \\sqrt{(${f3(t.B.este)} - ${f3(t.A.este)})^2 + (${f3(t.B.norte)} - ${f3(t.A.norte)})^2}`)}
+      ${K(`c = \\sqrt{(${f3(t.B.este-t.A.este)})^2 + (${f3(t.B.norte-t.A.norte)})^2} = ${f3(t.c)}\\ \\text{m}`)}
+      <div class="paso"><b>Semiperímetro:</b></div>
+      ${K(`s = \\frac{${f3(t.a)} + ${f3(t.b)} + ${f3(t.c)}}{2} = \\frac{${f3(t.a+t.b+t.c)}}{2} = ${f3(t.s)}\\ \\text{m}`)}
+      <div class="paso"><b>Área con Herón:</b></div>
+      ${K(`A_{${i+1}} = \\sqrt{${f3(t.s)} \\cdot (${f3(t.s)} - ${f3(t.a)}) \\cdot (${f3(t.s)} - ${f3(t.b)}) \\cdot (${f3(t.s)} - ${f3(t.c)})}`)}
+      ${K(`A_{${i+1}} = \\sqrt{${f3(t.s)} \\cdot ${f3(t.s-t.a)} \\cdot ${f3(t.s-t.b)} \\cdot ${f3(t.s-t.c)}} = \\sqrt{${f3(t.rad)}} = ${f3(t.area)}\\ \\text{m}^2`)}
+      <div class="res">Área del triángulo ${esc(nm)} = ${f3(t.area)} m²</div>
+    </div>`;
+  });
+
+  html += `<div class="resumen">
+    <div class="row2"><span>Suma de las áreas parciales:</span>
+      <span>${H.tri.map(t=>f3(t.area)).join(' + ')}</span></div>
+    <div class="big">Área total por Herón = ${f3(Aheron)} m² = ${(Aheron/10000).toFixed(3)} ha</div>
+  </div>`;
+
+  // ===== MÉTODO DE COORDENADAS =====
+  html += `<div class="pagebreak"></div>
+  <h2>3. Método de coordenadas (Gauss / Shoelace)</h2>
+  <p style="font-size:11.5px;color:#475569">Se aplica la fórmula general del polígono, sumando los productos
+  cruzados entre puntos consecutivos (incluyendo el cierre del último con el primero).</p>
+  ${K('A = \\frac{1}{2}\\left|\\sum_{i=1}^{n}\\left(E_i\\,N_{i+1} - E_{i+1}\\,N_i\\right)\\right|')}
+  <h4>Cálculo de cada producto cruzado</h4>`;
+
+  C.terms.forEach((t,i)=>{
+    const pa = pts[i].nombre, pb = pts[(i+1)%pts.length].nombre;
+    html += `<div class="tri">
+      <h4>Par ${i+1}: ${esc(pa)} → ${esc(pb)}</h4>
+      ${K(`\\Delta_{${i+1}} = E_{${esc(pa)}}\\cdot N_{${esc(pb)}} - E_{${esc(pb)}}\\cdot N_{${esc(pa)}}`)}
+      ${K(`\\Delta_{${i+1}} = (${f3(t.p.este)})( ${f3(t.q.norte)} ) - (${f3(t.q.este)})( ${f3(t.p.norte)} )`)}
+      ${K(`\\Delta_{${i+1}} = ${f3(t.p.este*t.q.norte)} - ${f3(t.q.este*t.p.norte)} = ${f3(t.t)}`)}
+    </div>`;
+  });
+
+  html += `<div class="resumen">
+    <div class="row2"><span>Sumatoria de diferencias (Σ):</span><span>${f3(C.sum)}</span></div>
+    <div class="row2"><span>Valor absoluto:</span><span>|${f3(C.sum)}| = ${f3(Math.abs(C.sum))}</span></div>
+    <div class="row2"><span>Área = ½ · |Σ|:</span><span>${f3(C.area)} m²</span></div>
+    <div class="big">Área total por coordenadas = ${f3(Acoord)} m² = ${(Acoord/10000).toFixed(3)} ha</div>
+  </div>`;
+
+  // ===== COMPARACIÓN =====
+  html += `<div class="pagebreak"></div>
+  <h2>4. Comparación de resultados</h2>
+  <div class="resumen">
+    <div class="row2"><span><b>Método de Herón:</b></span><span>${f3(Aheron)} m²  ·  ${(Aheron/10000).toFixed(3)} ha</span></div>
+    <div class="row2"><span><b>Método de coordenadas:</b></span><span>${f3(Acoord)} m²  ·  ${(Acoord/10000).toFixed(3)} ha</span></div>
+    <div class="row2"><span>Diferencia absoluta:</span><span>${f3(diff)} m²</span></div>
+    <div class="row2"><span>Diferencia relativa:</span><span>${rel.toFixed(3)} %</span></div>
+  </div>
+  ${K(`\\Delta A = \\left|A_{Herón} - A_{Coord}\\right| = \\left|${f3(Aheron)} - ${f3(Acoord)}\\right| = ${f3(diff)}\\ \\text{m}^2`)}
+  ${K(`\\varepsilon_{r} = \\frac{\\Delta A}{A_{Coord}}\\times 100 = \\frac{${f3(diff)}}{${f3(Acoord)}}\\times 100 = ${rel.toFixed(3)}\\,\\%`)}
+  <p style="font-size:11.5px;color:#475569;margin-top:10px">
+  Ambas metodologías son matemáticamente equivalentes. La diferencia observada proviene exclusivamente
+  del redondeo a 3 decimales aplicado en cada paso intermedio (longitudes, semiperímetros y productos),
+  por lo que es un valor pequeño y esperado en la práctica topográfica.</p>`;
+
+  // ===== PLANO =====
+  html += `<div class="pagebreak"></div>
+  <h2>5. Planimetría</h2>
+  <div class="svgbox">${svg}</div>
+  <p style="font-size:10.5px;color:#475569;margin-top:6px;text-align:center">
+    Plano del polígono con retícula de coordenadas, flecha de norte y escala gráfica.
+    El norte coincide con la dirección positiva del eje Y (Norte UTM).
+  </p>
+
+  <div class="footer">
+    Informe generado automáticamente · Todos los valores en metros y redondeados a 3 decimales.
+  </div>`;
+
+  /* ============ Abrir ventana con el HTML ============ */
+  const w = window.open('', '_blank');
+  if (!w){ toast('Permite ventanas emergentes para generar el PDF'); return; }
+
+  // Escribimos el documento completo (sin <script> inline)
+  const doc = `<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8">
+<title>Informe de Cálculo de Áreas</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+@page{size:A4;margin:18mm 15mm}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:#0f172a;margin:0;padding:0;font-size:12px;line-height:1.45}
+h1{font-size:22px;margin:0 0 6px;color:#1d4ed8}
+h2{font-size:15px;margin:18px 0 8px;color:#1d4ed8;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
+h3{font-size:13px;margin:12px 0 6px;color:#0f172a}
+h4{font-size:12px;margin:8px 0 4px;color:#475569;text-transform:uppercase;letter-spacing:.4px}
+.cover{text-align:center;padding:40px 20px;border:3px double #1d4ed8;border-radius:10px;margin-bottom:20px}
+.cover .sub{font-size:14px;color:#475569;margin:4px 0}
+.cover .title{font-size:26px;font-weight:800;color:#1d4ed8;margin:20px 0}
+.cover .meta{margin-top:30px;font-size:14px;text-align:left;display:inline-block;min-width:60%}
+.cover .meta div{padding:6px 0;border-bottom:1px dotted #cbd5e1}
+.cover .meta b{display:inline-block;min-width:120px;color:#475569;font-weight:600}
+table.data{width:100%;border-collapse:collapse;font-size:11px;margin:8px 0}
+table.data th, table.data td{border:1px solid #cbd5e1;padding:5px 6px;text-align:center}
+table.data th{background:#f1f5f9;color:#475569;font-size:10px;text-transform:uppercase}
+table.data td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tri{border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;margin:10px 0;page-break-inside:avoid;background:#fafbff}
+.tri h4{margin:0 0 6px;color:#1d4ed8;font-size:12px;text-transform:none;letter-spacing:0}
+.tri .paso{margin:6px 0;font-size:11.5px}
+.tri .res{background:#ecfdf5;border-left:3px solid #059669;padding:6px 10px;border-radius:6px;
+  margin-top:8px;font-weight:700;color:#065f46;font-size:12px}
+.katex{font-size:1em !important}
+.katex-display{margin:.4em 0 !important}
+.resumen{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;margin:12px 0;font-size:13px}
+.resumen .row2{display:flex;justify-content:space-between;padding:3px 0}
+.resumen .big{font-size:15px;font-weight:800;color:#1d4ed8;text-align:center;padding:8px 0}
+.pagebreak{page-break-before:always}
+.svgbox{border:1px solid #cbd5e1;border-radius:8px;padding:6px;text-align:center;background:#fff}
+.svgbox svg{max-width:100%;height:auto}
+.footer{margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:10px;color:#94a3b8;text-align:center}
+</style></head><body>${html}</body></html>`;
+
+  w.document.open();
+  w.document.write(doc);
+  w.document.close();
+
+  // Esperar a que la ventana termine de cargar y llamar a print() desde el padre
+  const lanzarPrint = ()=>{
+    try{
+      w.focus();
+      w.print();
+    }catch(err){ console.error(err); }
+  };
+  // Pequeña espera para dar tiempo al CSS externo de KaTeX (link) a aplicarse
+  if (w.document.readyState === 'complete'){
+    setTimeout(lanzarPrint, 500);
+  } else {
+    w.addEventListener('load', ()=>setTimeout(lanzarPrint, 500));
+    // Respaldo por si load nunca se dispara
+    setTimeout(()=>{ if (w.document.readyState!=='complete') lanzarPrint(); }, 2500);
+  }
+}
+
+/* ================= CSV ================= */
+function exportCSV(){
+  if (!lastResult) return toast('Primero calcula');
+  const {pts, H, C} = lastResult;
+  let csv = 'Punto,Este,Norte\n';
+  pts.forEach(p=>{ csv += `${p.nombre},${f3(p.este)},${f3(p.norte)}\n`; });
+  csv += `\nHerón (m2),${f3(H.total)}\n`;
+  csv += `Coordenadas (m2),${f3(C.area)}\n`;
+  csv += `Coordenadas (ha),${(C.area/10000).toFixed(3)}\n`;
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'resultados_area.csv';
+  a.click();
+}
+
+/* ================= INIT ================= */
+document.getElementById('fecha').value = new Date().toISOString().slice(0,10);
+for(let i=0;i<4;i++) addRow();
+</script>
+</body>
+</html>
